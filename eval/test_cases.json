@@ -1,0 +1,249 @@
+[
+  {
+    "id": "TC01",
+    "description": "Debt payoff with exact balance, APR, and monthly payment",
+    "conversation": [
+      {
+        "role": "user",
+        "content": "I have a $3,200 credit card balance at 22% APR and I pay $150 a month. How long will it take to pay it off and how much interest will I pay?"
+      }
+    ],
+    "expected_behaviors": [
+      "calls calculate_payoff_timeline tool",
+      "references $3200 balance in response",
+      "provides exact months or years to payoff",
+      "provides total interest paid as a dollar amount"
+    ],
+    "scoring_criteria": {
+      "references_user_specific_detail": "mentions $3200, 22% APR, or $150 payment",
+      "includes_concrete_number": "gives months/years to payoff and/or total interest amount"
+    }
+  },
+  {
+    "id": "TC02",
+    "description": "Credit utilization check",
+    "conversation": [
+      {
+        "role": "user",
+        "content": "My credit card has a $2,500 balance and a $5,000 limit. Is my credit utilization good?"
+      }
+    ],
+    "expected_behaviors": [
+      "calls calculate_credit_utilization tool",
+      "states the utilization percentage (50%)",
+      "advises whether this is healthy for credit score"
+    ],
+    "scoring_criteria": {
+      "references_user_specific_detail": "mentions $2500 balance or $5000 limit or 50%",
+      "includes_concrete_number": "gives utilization percentage and/or credit score impact"
+    }
+  },
+  {
+    "id": "TC03",
+    "description": "Minimum payment trap explanation",
+    "conversation": [
+      {
+        "role": "user",
+        "content": "I have $4,000 on a card with 24% APR. What happens if I just make minimum payments of 2%?"
+      }
+    ],
+    "expected_behaviors": [
+      "calls calculate_minimum_payment_cost tool",
+      "shows total interest paid over time",
+      "shows how many months/years it takes"
+    ],
+    "scoring_criteria": {
+      "references_user_specific_detail": "mentions $4000 or 24% APR",
+      "includes_concrete_number": "gives total interest paid and months/years"
+    }
+  },
+  {
+    "id": "TC04",
+    "description": "Credit card recommendation using earlier-stated credit score",
+    "conversation": [
+      {
+        "role": "user",
+        "content": "My credit score is 680. I'm a college student with no annual fee budget."
+      },
+      {
+        "role": "assistant",
+        "content": "Got it! A 680 credit score is a solid fair-to-good range. Since you want no annual fee, some great options for you would be the Discover it Student Cash Back or the Capital One Quicksilver Student card. Both are designed for students and will help you build credit with no annual fee."
+      },
+      {
+        "role": "user",
+        "content": "Which card should I apply for first?"
+      }
+    ],
+    "expected_behaviors": [
+      "references 680 credit score from earlier in the conversation",
+      "does not ask for credit score again",
+      "recommends a specific card appropriate for 680 score",
+      "gives a concrete recommendation with reasoning"
+    ],
+    "scoring_criteria": {
+      "references_user_specific_detail": "references 680 score or previous card discussion without re-asking",
+      "includes_concrete_number": "recommends a specific card with concrete reason"
+    }
+  },
+  {
+    "id": "TC05",
+    "description": "Multi-turn context: debt + credit score combined advice",
+    "conversation": [
+      {
+        "role": "user",
+        "content": "I have $1,800 in credit card debt at 19% APR. I also have a credit score of 620."
+      },
+      {
+        "role": "assistant",
+        "content": "Thanks for sharing those details! With $1,800 at 19% APR and a 620 credit score, it's important to focus on paying down that balance. Your utilization is likely contributing to the lower score. Let me know your monthly payment and I can calculate exactly when you'll be debt-free."
+      },
+      {
+        "role": "user",
+        "content": "I can pay $100 a month. Also, should I apply for a new card to transfer the balance?"
+      }
+    ],
+    "expected_behaviors": [
+      "calls calculate_payoff_timeline with $1800, 19% APR, $100/month",
+      "advises on balance transfer using 620 score context",
+      "does not re-ask for balance, APR, or credit score",
+      "provides payoff timeline with numbers"
+    ],
+    "scoring_criteria": {
+      "references_user_specific_detail": "uses $1800, 19%, and 620 score in advice without re-asking",
+      "includes_concrete_number": "gives payoff months and/or total interest"
+    }
+  },
+  {
+    "id": "TC06",
+    "description": "Budgeting advice with specific income",
+    "conversation": [
+      {
+        "role": "user",
+        "content": "I make $1,400 a month from my part-time job. My rent is $700, I spend about $200 on food, and $80 on subscriptions. How much should I be saving?"
+      }
+    ],
+    "expected_behaviors": [
+      "references specific numbers: $1400 income, $700 rent, $200 food, $80 subscriptions",
+      "calculates or references remaining income after expenses",
+      "gives a concrete savings recommendation"
+    ],
+    "scoring_criteria": {
+      "references_user_specific_detail": "mentions their specific income or expense numbers",
+      "includes_concrete_number": "gives a specific savings amount or percentage"
+    }
+  },
+  {
+    "id": "TC07",
+    "description": "High utilization urgent scenario",
+    "conversation": [
+      {
+        "role": "user",
+        "content": "I have $4,500 on a card with a $5,000 limit. My score dropped a lot this month. Why?"
+      }
+    ],
+    "expected_behaviors": [
+      "calls calculate_credit_utilization for $4500/$5000",
+      "explains that 90% utilization severely hurts credit score",
+      "gives specific advice to lower utilization"
+    ],
+    "scoring_criteria": {
+      "references_user_specific_detail": "mentions $4500 balance or $5000 limit or 90%",
+      "includes_concrete_number": "states the utilization percentage and its impact on score"
+    }
+  },
+  {
+    "id": "TC08",
+    "description": "Comparing two payoff strategies: avalanche vs. snowball",
+    "conversation": [
+      {
+        "role": "user",
+        "content": "I have two cards: Card A has $2,000 at 20% APR and Card B has $800 at 28% APR. I can pay $200/month total. Should I use avalanche or snowball?"
+      }
+    ],
+    "expected_behaviors": [
+      "explains both avalanche (high APR first) and snowball (low balance first) methods",
+      "references the specific cards' balances and APRs",
+      "recommends a strategy with reasoning"
+    ],
+    "scoring_criteria": {
+      "references_user_specific_detail": "mentions $2000, $800, 20% APR, or 28% APR",
+      "includes_concrete_number": "gives a concrete recommendation about which card to prioritize"
+    }
+  },
+  {
+    "id": "TC09",
+    "description": "Building credit from scratch",
+    "conversation": [
+      {
+        "role": "user",
+        "content": "I'm 18 and have no credit history at all. I'm a full-time student with a $600/month campus job. Where do I start?"
+      }
+    ],
+    "expected_behaviors": [
+      "acknowledges age and no credit history",
+      "recommends secured card or student card",
+      "gives concrete first steps with specific actions"
+    ],
+    "scoring_criteria": {
+      "references_user_specific_detail": "references student status, age 18, or $600 income",
+      "includes_concrete_number": "gives a specific recommended credit limit, deposit amount, or timeline"
+    }
+  },
+  {
+    "id": "TC10",
+    "description": "Statement analysis follow-up referencing specific categories",
+    "conversation": [
+      {
+        "role": "user",
+        "content": "I uploaded my statement and you said I spent $340 on dining and $120 on subscriptions. How can I cut back?"
+      }
+    ],
+    "expected_behaviors": [
+      "references $340 dining and $120 subscriptions from the context",
+      "gives specific actionable tips for reducing dining spend",
+      "gives specific tips for auditing subscriptions"
+    ],
+    "scoring_criteria": {
+      "references_user_specific_detail": "mentions $340 dining or $120 subscriptions",
+      "includes_concrete_number": "gives a specific target amount to reduce to, or number of subscriptions to cancel"
+    }
+  },
+  {
+    "id": "TC11",
+    "description": "Zero-interest period strategy",
+    "conversation": [
+      {
+        "role": "user",
+        "content": "I'm thinking of getting a card with 0% APR for 15 months and transferring my $2,700 balance. Is it worth it?"
+      }
+    ],
+    "expected_behaviors": [
+      "calculates what monthly payment needed to pay off $2700 in 15 months (~$180)",
+      "explains the benefit of 0% period",
+      "warns about what happens if not paid off in time"
+    ],
+    "scoring_criteria": {
+      "references_user_specific_detail": "mentions $2700 balance and 15 months",
+      "includes_concrete_number": "gives required monthly payment to clear balance within 0% period"
+    }
+  },
+  {
+    "id": "TC12",
+    "description": "Emergency fund vs. debt payoff tradeoff",
+    "conversation": [
+      {
+        "role": "user",
+        "content": "I have $500 in savings and $1,200 in credit card debt at 21% APR. Should I put my next paycheck toward the debt or savings?"
+      }
+    ],
+    "expected_behaviors": [
+      "acknowledges the specific amounts: $500 savings, $1200 debt, 21% APR",
+      "explains the math: 21% debt cost vs. savings account interest",
+      "gives a concrete recommendation"
+    ],
+    "scoring_criteria": {
+      "references_user_specific_detail": "mentions $500 savings, $1200 debt, or 21% APR",
+      "includes_concrete_number": "gives a specific allocation recommendation with reasoning"
+    }
+  }
+]
