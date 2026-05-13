@@ -492,7 +492,7 @@ export default function App() {
               ))}
             </>
         }
-        {loading && <TypingIndicator stage={THINKING_STAGES[thinkingStage]} />}
+        {loading && !messages.some(m => m.streaming) && <TypingIndicator stage={THINKING_STAGES[thinkingStage]} />}
         {error && <div className="error-banner">⚠️ {error}</div>}
         <div ref={bottomRef} />
       </main>

@@ -1,3 +1,4 @@
+import asyncio
 import base64
 import json
 import os
@@ -6,7 +7,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from openai import OpenAI
+from openai import AsyncOpenAI, OpenAI
 from pydantic import BaseModel
 
 load_dotenv()
@@ -22,6 +23,7 @@ app.add_middleware(
 )
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+async_client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 SYSTEM_PROMPT = """You are Penny, a friendly and knowledgeable AI financial advisor for college students and young adults (18–25). Your tone is warm, encouraging, and jargon-free.
 
@@ -265,9 +267,9 @@ async def generate_chat_stream(messages: list[dict]):
     tools_used: list[str] = []
     tool_results_data: dict = {}
 
-    # Phase 1: run tool calls synchronously
+    # Phase 1: run tool calls using async client
     while True:
-        response = client.chat.completions.create(
+        response = await async_client.chat.completions.create(
             model="gpt-4o", messages=full_messages, tools=TOOLS, tool_choice="auto",
         )
         msg = response.choices[0].message
@@ -284,11 +286,11 @@ async def generate_chat_stream(messages: list[dict]):
         else:
             break
 
-    # Phase 2: stream the text response
-    stream = client.chat.completions.create(
+    # Phase 2: stream the text response using async client + async for
+    stream = await async_client.chat.completions.create(
         model="gpt-4o", messages=full_messages, stream=True,
     )
-    for chunk in stream:
+    async for chunk in stream:
         if chunk.choices and chunk.choices[0].delta.content:
             yield f"data: {json.dumps({'type': 'token', 'content': chunk.choices[0].delta.content})}\n\n"
 
