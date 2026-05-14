@@ -172,20 +172,86 @@ function TypingIndicator({ stage }) {
   );
 }
 
-// ── Welcome card ──────────────────────────────────────────────────────────────
-function WelcomeCard({ onPrompt }) {
+// ── Welcome page ──────────────────────────────────────────────────────────────
+const FEATURES = [
+  {
+    icon: "📄",
+    title: "Statement Analysis",
+    desc: "Upload a credit card statement (PDF or image) and get an instant breakdown of your spending categories, patterns, and red flags.",
+  },
+  {
+    icon: "📅",
+    title: "Debt Payoff Planner",
+    desc: "Enter your balance, APR, and monthly payment — Penny calculates exactly how long it takes and how much interest you'll pay, with a visual chart.",
+  },
+  {
+    icon: "📊",
+    title: "Credit Score Guidance",
+    desc: "Understand your credit utilization ratio, what's dragging your score down, and the fastest ways to improve it.",
+  },
+  {
+    icon: "💰",
+    title: "Budgeting & Savings",
+    desc: "Get personalized budgeting advice tailored to your income and goals — no finance jargon, just clear actionable steps.",
+  },
+];
+
+function WelcomePage({ onPrompt, profileFilled, onOpenProfile }) {
   return (
-    <div className="welcome-card bubble-enter">
-      <div className="welcome-icon">🪙</div>
-      <h2 className="welcome-title">Hi, I'm Penny</h2>
-      <p className="welcome-sub">Your AI financial advisor for credit, debt & budgeting</p>
-      <div className="quick-prompts">
+    <div className="welcome-page">
+
+      {/* Hero */}
+      <div className="wp-hero">
+        <div className="wp-coin">🪙</div>
+        <h1 className="wp-title">Hi, I'm Penny</h1>
+        <p className="wp-sub">
+          Your AI financial advisor built for college students and young adults.
+          Ask me anything about credit, debt, and budgeting — I'll give you clear,
+          jargon-free advice backed by real calculations.
+        </p>
+        {!profileFilled ? (
+          <button className="wp-profile-cta" onClick={onOpenProfile}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Set up my financial profile for personalized advice
+            <span className="wp-cta-badge">Recommended</span>
+          </button>
+        ) : (
+          <div className="wp-profile-filled">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Profile saved — Penny knows your financial details
+            <button className="wp-profile-edit" onClick={onOpenProfile}>Edit</button>
+          </div>
+        )}
+      </div>
+
+      {/* Feature grid */}
+      <div className="wp-section-label">What I can do</div>
+      <div className="wp-features">
+        {FEATURES.map(f => (
+          <div key={f.title} className="wp-feature-card">
+            <span className="wp-feature-icon">{f.icon}</span>
+            <div>
+              <h3 className="wp-feature-title">{f.title}</h3>
+              <p className="wp-feature-desc">{f.desc}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Quick start */}
+      <div className="wp-section-label">Quick start</div>
+      <div className="wp-prompts">
         {QUICK_PROMPTS.map(p => (
-          <button key={p.label} className="quick-prompt-btn" onClick={() => onPrompt(p.text)}>
+          <button key={p.label} className="wp-prompt-btn" onClick={() => onPrompt(p.text)}>
             {p.label}
+            <svg className="wp-prompt-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
           </button>
         ))}
       </div>
+
+      <p className="wp-footer">
+        Your data stays in this browser · No account required · Powered by GPT-4o
+      </p>
     </div>
   );
 }
@@ -240,6 +306,98 @@ function HistoryPanel({ sessions, onSelect, onDelete, onClose }) {
   );
 }
 
+// ── Financial Profile panel ───────────────────────────────────────────────────
+const EMPTY_PROFILE = { income: "", balance: "", creditLimit: "", apr: "", rent: "", goal: "" };
+
+function loadProfile() {
+  try { return JSON.parse(localStorage.getItem("penny-profile") || "null") || EMPTY_PROFILE; }
+  catch { return EMPTY_PROFILE; }
+}
+
+function ProfilePanel({ profile, onSave, onClose }) {
+  const [form, setForm] = useState({ ...profile });
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+  const hasData = Object.values(form).some(v => v !== "");
+
+  return (
+    <div className="profile-panel bubble-enter">
+      <div className="history-hdr">
+        <span>My Financial Profile</span>
+        <button className="history-close" onClick={onClose}>✕</button>
+      </div>
+      <p className="profile-sub">Share your details so Penny can give you personalized advice.</p>
+
+      <div className="profile-fields">
+        <label className="profile-label">
+          Monthly take-home income
+          <div className="profile-input-wrap">
+            <span className="profile-affix">$</span>
+            <input className="profile-input" type="number" min="0" placeholder="e.g. 2400"
+              value={form.income} onChange={e => set("income", e.target.value)} />
+          </div>
+        </label>
+
+        <label className="profile-label">
+          Credit card balance
+          <div className="profile-input-wrap">
+            <span className="profile-affix">$</span>
+            <input className="profile-input" type="number" min="0" placeholder="e.g. 1500"
+              value={form.balance} onChange={e => set("balance", e.target.value)} />
+          </div>
+        </label>
+
+        <label className="profile-label">
+          Credit limit
+          <div className="profile-input-wrap">
+            <span className="profile-affix">$</span>
+            <input className="profile-input" type="number" min="0" placeholder="e.g. 3000"
+              value={form.creditLimit} onChange={e => set("creditLimit", e.target.value)} />
+          </div>
+        </label>
+
+        <label className="profile-label">
+          Credit card APR
+          <div className="profile-input-wrap profile-input-wrap--suffix">
+            <input className="profile-input" type="number" min="0" max="100" step="0.01" placeholder="e.g. 24.99"
+              value={form.apr} onChange={e => set("apr", e.target.value)} />
+            <span className="profile-affix profile-affix--right">%</span>
+          </div>
+        </label>
+
+        <label className="profile-label">
+          Monthly rent / housing
+          <div className="profile-input-wrap">
+            <span className="profile-affix">$</span>
+            <input className="profile-input" type="number" min="0" placeholder="e.g. 850"
+              value={form.rent} onChange={e => set("rent", e.target.value)} />
+          </div>
+        </label>
+
+        <label className="profile-label">
+          Primary financial goal
+          <select className="profile-select" value={form.goal} onChange={e => set("goal", e.target.value)}>
+            <option value="">Select a goal…</option>
+            <option value="Pay off credit card debt">Pay off credit card debt</option>
+            <option value="Build my credit score">Build my credit score</option>
+            <option value="Create a monthly budget">Create a monthly budget</option>
+            <option value="Save more money">Save more money</option>
+            <option value="Understand my credit">Understand my credit</option>
+          </select>
+        </label>
+      </div>
+
+      <div className="profile-actions">
+        <button className="profile-save-btn" onClick={() => onSave(form)}>Save Profile</button>
+        {hasData && (
+          <button className="profile-clear-btn" onClick={() => { setForm(EMPTY_PROFILE); onSave(EMPTY_PROFILE); }}>
+            Clear
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── Session storage helpers ───────────────────────────────────────────────────
 function loadSessions() {
   try { return JSON.parse(localStorage.getItem("penny-sessions") || "[]"); }
@@ -274,7 +432,11 @@ export default function App() {
   const [newestId,      setNewestId]      = useState(null);
   const [showScroll,    setShowScroll]    = useState(false);
   const [showHistory,   setShowHistory]   = useState(false);
+  const [showProfile,   setShowProfile]   = useState(false);
+  const [profile,       setProfile]       = useState(loadProfile);
   const [sessions,      setSessions]      = useState(loadSessions);
+
+  const profileFilled = Object.values(profile).some(v => v !== "");
 
   const bottomRef   = useRef(null);
   const chatRef     = useRef(null);
@@ -317,10 +479,30 @@ export default function App() {
     if (el) setShowScroll(el.scrollHeight - el.scrollTop - el.clientHeight > 120);
   }
 
+  function buildProfileContext(p) {
+    const parts = [];
+    if (p.income)      parts.push(`monthly take-home income: $${p.income}`);
+    if (p.balance)     parts.push(`credit card balance: $${p.balance}`);
+    if (p.creditLimit) parts.push(`credit limit: $${p.creditLimit}`);
+    if (p.apr)         parts.push(`APR: ${p.apr}%`);
+    if (p.rent)        parts.push(`monthly rent: $${p.rent}`);
+    if (p.goal)        parts.push(`primary financial goal: ${p.goal}`);
+    if (parts.length === 0) return null;
+    return `[My financial profile — use this context to personalize your advice: ${parts.join(", ")}]`;
+  }
+
   function historyFor(msgs) {
-    return msgs
+    const base = msgs
       .filter(m => m.role === "user" || m.role === "assistant")
       .map(m => ({ role: m.role, content: m.content }));
+    const ctx = buildProfileContext(profile);
+    if (!ctx) return base;
+    // Prepend as a silent user/assistant exchange so Penny knows the profile
+    return [
+      { role: "user",      content: ctx },
+      { role: "assistant", content: "Got it! I have your financial profile and will use it to give you personalized advice." },
+      ...base,
+    ];
   }
 
   // ── Streaming send ──────────────────────────────────────────────────────────
@@ -433,6 +615,12 @@ export default function App() {
     }
   }
 
+  function saveProfile(p) {
+    setProfile(p);
+    localStorage.setItem("penny-profile", JSON.stringify(p));
+    setShowProfile(false);
+  }
+
   function clearChat() {
     sessionId.current = Date.now().toString();
     setMessages([]); setError(null); setInput(""); setStagedFile(null); setNewestId(null);
@@ -471,20 +659,37 @@ export default function App() {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             </button>
           )}
-          <button className="icon-btn" onClick={() => setShowHistory(h => !h)} title="Chat history">
+          <button className={`icon-btn ${profileFilled ? "icon-btn--active" : ""}`} onClick={() => { setShowProfile(p => !p); setShowHistory(false); }} title="My financial profile">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            {profileFilled && <span className="profile-dot" />}
+          </button>
+          <button className="icon-btn" onClick={() => { setShowHistory(h => !h); setShowProfile(false); }} title="Chat history">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/></svg>
           </button>
           <button className="clear-btn" onClick={clearChat}>+ New Chat</button>
         </div>
       </header>
 
+      {showProfile && (
+        <ProfilePanel profile={profile} onSave={saveProfile} onClose={() => setShowProfile(false)} />
+      )}
+
       {showHistory && (
         <HistoryPanel sessions={sessions} onSelect={loadSession} onDelete={deleteSession} onClose={() => setShowHistory(false)} />
       )}
 
+      {profileFilled && !showProfile && (
+        <div className="profile-banner">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Profile active
+          {profile.goal && <span className="profile-banner-goal">· {profile.goal}</span>}
+          <button className="profile-banner-edit" onClick={() => setShowProfile(true)}>Edit</button>
+        </div>
+      )}
+
       <main className="chat-area" ref={chatRef} onScroll={handleScroll}>
         {messages.length === 0
-          ? <WelcomeCard onPrompt={text => sendMessage(text)} />
+          ? <WelcomePage onPrompt={text => sendMessage(text)} profileFilled={profileFilled} onOpenProfile={() => setShowProfile(true)} />
           : <>
               <div className="date-divider"><span>Today</span></div>
               {messages.map((msg, i) => (
