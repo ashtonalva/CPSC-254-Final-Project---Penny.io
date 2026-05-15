@@ -5,6 +5,24 @@ import "./App.css";
 
 const API_BASE = "http://localhost:8000";
 
+// ── Feature 5: Daily Tips ─────────────────────────────────────────────────────
+const DAILY_TIPS = [
+  { icon: "📊", tip: "Payment history is 35% of your credit score — the single biggest factor." },
+  { icon: "💳", tip: "Keep credit utilization below 30%. Below 10% is ideal for an excellent score." },
+  { icon: "💸", tip: "The avalanche method (highest APR first) saves the most interest when paying off debt." },
+  { icon: "🏦", tip: "A credit utilization drop of 20% can raise your score by 20–30 points within 30 days." },
+  { icon: "📅", tip: "Making two half-payments per month instead of one full payment reduces average daily balance." },
+  { icon: "🎯", tip: "Keeping old credit cards open (even unused) helps your average account age and score." },
+  { icon: "🔒", tip: "A hard inquiry only affects your credit score for 12 months and drops off after 2 years." },
+  { icon: "💡", tip: "The 50/30/20 rule: 50% needs, 30% wants, 20% savings — a simple budget that works." },
+  { icon: "⚡", tip: "Paying just $10 above the minimum payment can cut years off your debt payoff timeline." },
+  { icon: "📈", tip: "Having 2–3 credit cards with low utilization looks better to lenders than 1 maxed card." },
+  { icon: "🛡️", tip: "Becoming an authorized user on a parent's old card can instantly boost a thin credit file." },
+  { icon: "🔄", tip: "Balance transfers to 0% APR cards can save hundreds — watch for transfer fees (usually 3–5%)." },
+  { icon: "📉", tip: "Minimum payments on a $1,500 balance at 24.99% APR can take 7+ years to pay off fully." },
+  { icon: "🎓", tip: "Student credit cards are designed for thin files — they're easier to get approved for than regular cards." },
+];
+
 const QUICK_PROMPTS = [
   { label: "💳  Pay off debt",       text: "I have credit card debt I want to pay off. Can you help me make a plan?" },
   { label: "📊  Analyze statement",  text: "__DEMO__" },
@@ -12,17 +30,25 @@ const QUICK_PROMPTS = [
 ];
 
 const TOOL_META = {
-  calculate_payoff_timeline:      { icon: "📅", label: "Payoff calculator" },
-  calculate_credit_utilization:   { icon: "📊", label: "Utilization check" },
-  calculate_minimum_payment_cost: { icon: "⚠️", label: "Min. payment analysis" },
+  calculate_payoff_timeline:         { icon: "📅", label: "Payoff calculator" },
+  calculate_credit_utilization:      { icon: "📊", label: "Utilization check" },
+  calculate_minimum_payment_cost:    { icon: "⚠️", label: "Min. payment analysis" },
+  calculate_financial_health_score:  { icon: "💯", label: "Health score" },
+  visualize_spending_categories:     { icon: "🥧", label: "Spending breakdown" },
+  calculate_budget_breakdown:        { icon: "💰", label: "Budget plan" },
+  compare_payoff_scenarios:          { icon: "⚖️", label: "What-if comparison" },
 };
 
 const THINKING_STAGES = ["Thinking…", "Analyzing your question…", "Running calculations…", "Crafting advice…"];
 
 const SUGGESTIONS_MAP = {
-  calculate_payoff_timeline:      ["What if I increased my payment?", "Show minimum payment impact", "Should I do a balance transfer?"],
-  calculate_credit_utilization:   ["How do I lower my utilization fast?", "What score impact should I expect?", "How much should I pay down?"],
-  calculate_minimum_payment_cost: ["What's the fastest payoff strategy?", "How much would I save paying double?", "Avalanche vs snowball method?"],
+  calculate_payoff_timeline:        ["What if I increased my payment?", "Show minimum payment impact", "Should I do a balance transfer?"],
+  calculate_credit_utilization:     ["How do I lower my utilization fast?", "What score impact should I expect?", "How much should I pay down?"],
+  calculate_minimum_payment_cost:   ["What's the fastest payoff strategy?", "How much would I save paying double?", "Avalanche vs snowball method?"],
+  calculate_financial_health_score: ["How do I improve my health score?", "What's dragging my score down?", "Show me a budget plan"],
+  visualize_spending_categories:    ["Where am I overspending?", "Help me cut my spending", "Make me a budget"],
+  calculate_budget_breakdown:       ["How do I stick to the 50/30/20 rule?", "Where should I cut to save more?", "What's a realistic savings goal?"],
+  compare_payoff_scenarios:         ["What if I paid even more?", "Should I do a balance transfer?", "How much interest will I save?"],
 };
 
 function getSuggestions(toolsUsed, text) {
@@ -41,6 +67,9 @@ function fmt(ts) {
 }
 function fmtBytes(b) {
   return b < 1024 ? `${b} B` : b < 1048576 ? `${(b / 1024).toFixed(1)} KB` : `${(b / 1048576).toFixed(1)} MB`;
+}
+function fmtDollar(v) {
+  return `$${v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 // ── Markdown renderer ─────────────────────────────────────────────────────────
@@ -100,6 +129,207 @@ function PayoffChart({ data }) {
   );
 }
 
+// ── Feature 1: Health Score Card ──────────────────────────────────────────────
+function HealthScoreCard({ data }) {
+  if (!data || data.score == null) return null;
+  const { score, grade, label, breakdown } = data;
+
+  // Semicircle gauge
+  const R = 54, CX = 70, CY = 70;
+  const circumference = Math.PI * R; // half circle
+  const arcLen = (score / 100) * circumference;
+  const arcColor = score >= 80 ? "#34d399" : score >= 65 ? "#fbbf24" : score >= 50 ? "#fb923c" : "#f87171";
+
+  return (
+    <div className="health-score-card bubble-enter">
+      <div className="hsc-top">
+        <div className="hsc-gauge-wrap">
+          <svg width="140" height="80" viewBox="0 0 140 80">
+            {/* background arc */}
+            <path
+              d={`M ${CX - R},${CY} A ${R},${R} 0 0 1 ${CX + R},${CY}`}
+              fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="10"
+              strokeLinecap="round"
+            />
+            {/* colored arc */}
+            <path
+              d={`M ${CX - R},${CY} A ${R},${R} 0 0 1 ${CX + R},${CY}`}
+              fill="none" stroke={arcColor} strokeWidth="10"
+              strokeLinecap="round"
+              strokeDasharray={`${arcLen} ${circumference}`}
+              style={{ transition: "stroke-dasharray 0.6s ease" }}
+            />
+          </svg>
+          <div className="hsc-score-center">
+            <span className="hsc-score-num" style={{ color: arcColor }}>{score}</span>
+            <span className="hsc-score-grade" style={{ color: arcColor }}>{grade}</span>
+          </div>
+        </div>
+        <div className="hsc-right">
+          <div className="hsc-label">{label} Financial Health</div>
+          <div className="hsc-sub">Score: {score} / 100</div>
+        </div>
+      </div>
+      <div className="hsc-breakdown">
+        {breakdown.map(item => (
+          <div key={item.category} className="hsc-row">
+            <div className="hsc-row-top">
+              <span className="hsc-cat">{item.category}</span>
+              <span className="hsc-pts">{item.points}/{item.max}</span>
+            </div>
+            <div className="hsc-bar-bg">
+              <div className="hsc-bar-fill" style={{ width: `${(item.points / item.max) * 100}%`, backgroundColor: arcColor }} />
+            </div>
+            <span className="hsc-status">{item.status}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Feature 2: Spending Pie Chart ─────────────────────────────────────────────
+const PIE_COLORS = ["#818cf8","#a78bfa","#34d399","#fbbf24","#f87171","#60a5fa","#fb923c","#e879f9"];
+
+function SpendingPieChart({ data }) {
+  if (!data || !data.categories || data.categories.length === 0) return null;
+  const { total, categories } = data;
+
+  // Build donut slices
+  const R = 50, CX = 60, CY = 60, stroke = 18;
+  const circ = 2 * Math.PI * R;
+  let offset = 0;
+  const slices = categories.map((cat, i) => {
+    const frac = cat.amount / total;
+    const dashLen = frac * circ;
+    const slice = { ...cat, frac, dashLen, offset, color: PIE_COLORS[i % PIE_COLORS.length] };
+    offset += dashLen;
+    return slice;
+  });
+
+  return (
+    <div className="spending-pie-card bubble-enter">
+      <div className="spc-title">Spending Breakdown</div>
+      <div className="spc-body">
+        <div className="spc-donut-wrap">
+          <svg width="120" height="120" viewBox="0 0 120 120">
+            {slices.map((s, i) => (
+              <circle key={i} cx={CX} cy={CY} r={R}
+                fill="none"
+                stroke={s.color}
+                strokeWidth={stroke}
+                strokeDasharray={`${s.dashLen} ${circ - s.dashLen}`}
+                strokeDashoffset={-s.offset + circ / 4}
+                strokeLinecap="butt"
+              />
+            ))}
+            <text x={CX} y={CY - 5} textAnchor="middle" fill="var(--text)" fontSize="11" fontWeight="700">
+              {fmtDollar(total).replace(".00", "")}
+            </text>
+            <text x={CX} y={CY + 9} textAnchor="middle" fill="var(--text-3)" fontSize="8">total</text>
+          </svg>
+        </div>
+        <div className="spc-legend">
+          {slices.map((s, i) => (
+            <div key={i} className="spc-legend-row">
+              <span className="spc-dot" style={{ background: s.color }} />
+              <span className="spc-leg-label">{s.label}</span>
+              <span className="spc-leg-pct">{s.pct}%</span>
+              <span className="spc-leg-amt">{fmtDollar(s.amount)}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Feature 3: Budget Breakdown ───────────────────────────────────────────────
+function BudgetBreakdown({ data }) {
+  if (!data || !data.monthly_income) return null;
+  const { monthly_income, needs, wants, savings } = data;
+  const bars = [
+    { label: "Needs", pct: needs.pct, amount: needs.target, color: "var(--indigo)", sub: `${needs.pct}% of income` },
+    { label: "Wants", pct: wants.pct, amount: wants.target, color: "var(--violet)", sub: `${wants.pct}% of income` },
+    { label: "Savings", pct: savings.pct, amount: savings.target, color: "var(--green)", sub: `${savings.pct}% of income` },
+  ];
+  return (
+    <div className="budget-breakdown-card bubble-enter">
+      <div className="bbd-title">50/30/20 Budget Plan</div>
+      <div className="bbd-income">Based on {fmtDollar(monthly_income)}/mo income</div>
+      {bars.map(b => (
+        <div key={b.label} className="bbd-row">
+          <div className="bbd-row-top">
+            <span className="bbd-label">{b.label}</span>
+            <span className="bbd-amount" style={{ color: b.color }}>{fmtDollar(b.amount)}</span>
+          </div>
+          <div className="bbd-bar-bg">
+            <div className="bbd-bar-fill" style={{ width: `${b.pct}%`, background: b.color }} />
+          </div>
+          <span className="bbd-sub">{b.sub}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── Feature 4: What-If Comparison ────────────────────────────────────────────
+function MiniPayoffChart({ data, color }) {
+  if (!data || data.length < 2) return null;
+  const W = 130, H = 60;
+  const PAD = { top: 6, right: 6, bottom: 16, left: 32 };
+  const iW = W - PAD.left - PAD.right;
+  const iH = H - PAD.top - PAD.bottom;
+  const maxBal = data[0].balance;
+  const maxMo  = data[data.length - 1].month;
+  const x = mo  => PAD.left + (mo / maxMo) * iW;
+  const y = bal => PAD.top  + iH - (bal / maxBal) * iH;
+  const line = data.map((d, i) => `${i === 0 ? "M" : "L"} ${x(d.month)} ${y(d.balance)}`).join(" ");
+  const area = `${line} L ${x(maxMo)} ${y(0) + 1} L ${x(0)} ${y(0) + 1} Z`;
+  const fmt$ = v => v >= 1000 ? `$${(v / 1000).toFixed(1)}k` : `$${v}`;
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} width="100%">
+      <defs>
+        <linearGradient id={`mcg-${color}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.25" />
+          <stop offset="100%" stopColor={color} stopOpacity="0.02" />
+        </linearGradient>
+      </defs>
+      <path d={area} fill={`url(#mcg-${color})`} />
+      <path d={line} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <text x={PAD.left - 2} y={PAD.top + 3} fill="rgba(255,255,255,0.3)" fontSize="6" textAnchor="end">{fmt$(maxBal)}</text>
+      <text x={x(0)}     y={H - 3} fill="rgba(255,255,255,0.3)" fontSize="6" textAnchor="middle">0</text>
+      <text x={x(maxMo)} y={H - 3} fill="rgba(255,255,255,0.3)" fontSize="6" textAnchor="middle">{maxMo}mo</text>
+    </svg>
+  );
+}
+
+function WhatIfComparison({ data }) {
+  if (!data || !data.scenario_a) return null;
+  const { scenario_a: a, scenario_b: b } = data;
+  return (
+    <div className="whatif-card bubble-enter">
+      <div className="wic-title">Payment Comparison</div>
+      <div className="wic-cols">
+        {[{ s: a, label: "Current", color: "#818cf8" }, { s: b, label: "Boosted", color: "#34d399" }].map(({ s, label, color }) => (
+          <div key={label} className="wic-col">
+            <div className="wic-col-label" style={{ color }}>{label}</div>
+            <div className="wic-payment" style={{ color }}>{fmtDollar(s.payment)}<span className="wic-mo">/mo</span></div>
+            <MiniPayoffChart data={s.balance_history} color={color} />
+            <div className="wic-stat"><span className="wic-stat-k">Payoff</span><span>{s.years}yr ({s.months}mo)</span></div>
+            <div className="wic-stat"><span className="wic-stat-k">Interest</span><span style={{ color: "#f87171" }}>{fmtDollar(s.total_interest)}</span></div>
+          </div>
+        ))}
+      </div>
+      {b.total_interest != null && a.total_interest != null && (
+        <div className="wic-savings">
+          You save <strong style={{ color: "#34d399" }}>{fmtDollar(a.total_interest - b.total_interest)}</strong> in interest and {a.months - b.months} months by boosting your payment.
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Copy button ───────────────────────────────────────────────────────────────
 function CopyButton({ text }) {
   const [done, setDone] = useState(false);
@@ -120,6 +350,10 @@ function MessageBubble({ message, isNew, onSuggestion }) {
   const isUser = message.role === "user";
   const chips  = (message.tools_used ?? []).map(t => TOOL_META[t]).filter(Boolean);
   const chart  = message.tool_results?.calculate_payoff_timeline?.balance_history;
+  const healthScore  = message.tool_results?.calculate_financial_health_score;
+  const budgetData   = message.tool_results?.calculate_budget_breakdown;
+  const spendingCats = message.tool_results?.visualize_spending_categories;
+  const whatIfData   = message.tool_results?.compare_payoff_scenarios;
   const suggs  = message.suggestions ?? [];
 
   return (
@@ -136,6 +370,10 @@ function MessageBubble({ message, isNew, onSuggestion }) {
         </div>
 
         {chart && !message.streaming && <PayoffChart data={chart} />}
+        {healthScore && !message.streaming && <HealthScoreCard data={healthScore} />}
+        {spendingCats && !message.streaming && <SpendingPieChart data={spendingCats} />}
+        {budgetData && !message.streaming && <BudgetBreakdown data={budgetData} />}
+        {whatIfData && !message.streaming && <WhatIfComparison data={whatIfData} />}
 
         {chips.length > 0 && (
           <div className="tool-chips">
@@ -172,6 +410,20 @@ function TypingIndicator({ stage }) {
   );
 }
 
+// ── Feature 5: Daily Tip card ─────────────────────────────────────────────────
+function DailyTip() {
+  const tip = DAILY_TIPS[Math.floor(Date.now() / 86400000) % DAILY_TIPS.length];
+  return (
+    <div className="daily-tip-card">
+      <span className="dt-icon">{tip.icon}</span>
+      <div className="dt-body">
+        <span className="dt-label">Tip of the day</span>
+        <span className="dt-text">{tip.tip}</span>
+      </div>
+    </div>
+  );
+}
+
 // ── Welcome page ──────────────────────────────────────────────────────────────
 const FEATURES = [
   {
@@ -196,9 +448,26 @@ const FEATURES = [
   },
 ];
 
-function WelcomePage({ onPrompt, profileFilled, onOpenProfile }) {
+// Feature 6: WelcomePage accepts sessions + onContinueLastChat
+function WelcomePage({ onPrompt, profileFilled, onOpenProfile, sessions, profile, onContinueLastChat }) {
+  const hasHistory = sessions.length > 0;
   return (
     <div className="welcome-page">
+
+      {/* Feature 6: Welcome back banner */}
+      {hasHistory && (
+        <div className="welcome-back-banner">
+          <span className="wb-text">
+            {profile?.goal
+              ? `Welcome back! Still working on: ${profile.goal}?`
+              : "Welcome back! Ready to pick up where you left off?"}
+          </span>
+          <button className="wb-continue-btn" onClick={onContinueLastChat}>
+            Continue last chat
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+        </div>
+      )}
 
       {/* Hero */}
       <div className="wp-hero">
@@ -223,6 +492,9 @@ function WelcomePage({ onPrompt, profileFilled, onOpenProfile }) {
           </div>
         )}
       </div>
+
+      {/* Feature 5: Daily tip above feature grid */}
+      <DailyTip />
 
       {/* Feature grid */}
       <div className="wp-section-label">What I can do</div>
@@ -436,13 +708,40 @@ export default function App() {
   const [profile,       setProfile]       = useState(loadProfile);
   const [sessions,      setSessions]      = useState(loadSessions);
 
+  // Feature 7: dark/light mode
+  const [theme, setTheme] = useState(() => localStorage.getItem('penny-theme') || 'dark');
+
+  // Feature 8: voice input
+  const [listening, setListening] = useState(false);
+  const recognitionRef = useRef(null);
+
+  // Feature 10: onboarding tooltip
+  const [showTooltip, setShowTooltip] = useState(
+    () => !localStorage.getItem('penny-onboarded') && !Object.values(loadProfile()).some(v => v !== '')
+  );
+
   const profileFilled = Object.values(profile).some(v => v !== "");
 
   const bottomRef   = useRef(null);
   const chatRef     = useRef(null);
   const fileRef     = useRef(null);
+  // Feature 9: separate textareaRef
+  const textareaRef = useRef(null);
   const stageTimer  = useRef(null);
   const sessionId   = useRef(Date.now().toString());
+
+  // Feature 7: persist theme
+  useEffect(() => {
+    localStorage.setItem('penny-theme', theme);
+  }, [theme]);
+
+  // Feature 9: auto-resize textarea
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+  }, [input]);
 
   // thinking stage cycling
   useEffect(() => {
@@ -497,12 +796,31 @@ export default function App() {
       .map(m => ({ role: m.role, content: m.content }));
     const ctx = buildProfileContext(profile);
     if (!ctx) return base;
-    // Prepend as a silent user/assistant exchange so Penny knows the profile
     return [
       { role: "user",      content: ctx },
       { role: "assistant", content: "Got it! I have your financial profile and will use it to give you personalized advice." },
       ...base,
     ];
+  }
+
+  // Feature 10: dismiss tooltip
+  function dismissTooltip() {
+    setShowTooltip(false);
+    localStorage.setItem('penny-onboarded', '1');
+  }
+
+  // Feature 8: voice input toggle
+  function toggleVoice() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { setError("Voice input not supported in this browser. Try Chrome."); return; }
+    if (listening) { recognitionRef.current?.stop(); setListening(false); return; }
+    const r = new SR();
+    r.continuous = false; r.interimResults = false; r.lang = 'en-US';
+    r.onresult = e => { setInput(prev => (prev ? prev + ' ' : '') + e.results[0][0].transcript); setListening(false); };
+    r.onerror = () => setListening(false);
+    r.onend = () => setListening(false);
+    recognitionRef.current = r;
+    r.start(); setListening(true);
   }
 
   // ── Streaming send ──────────────────────────────────────────────────────────
@@ -564,6 +882,9 @@ export default function App() {
 
     if (stagedFile) { await doUpload(stagedFile); setStagedFile(null); return; }
     if (!text || loading) return;
+
+    // Feature 10: dismiss tooltip on first message
+    dismissTooltip();
 
     setInput("");
     setError(null);
@@ -638,8 +959,13 @@ export default function App() {
     if (sessionId.current === id) clearChat();
   }
 
+  // Feature 6: continue last chat
+  function onContinueLastChat() {
+    if (sessions.length > 0) loadSession(sessions[0]);
+  }
+
   return (
-    <div className="app">
+    <div className={`app${theme === 'light' ? ' light-mode' : ''}`}>
       <div className={`progress-bar ${loading ? "progress-active" : ""}`} />
 
       <header className="header">
@@ -659,10 +985,32 @@ export default function App() {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             </button>
           )}
-          <button className={`icon-btn ${profileFilled ? "icon-btn--active" : ""}`} onClick={() => { setShowProfile(p => !p); setShowHistory(false); }} title="My financial profile">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            {profileFilled && <span className="profile-dot" />}
+
+          {/* Feature 7: Theme toggle */}
+          <button className="icon-btn" onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')} title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}>
+            {theme === 'dark'
+              ? /* Moon */ <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"/></svg>
+              : /* Sun */  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            }
           </button>
+
+          <div style={{ position: "relative" }}>
+            <button className={`icon-btn ${profileFilled ? "icon-btn--active" : ""}`}
+              onClick={() => { setShowProfile(p => !p); setShowHistory(false); dismissTooltip(); }}
+              title="My financial profile">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              {profileFilled && <span className="profile-dot" />}
+            </button>
+            {/* Feature 10: Onboarding tooltip */}
+            {showTooltip && (
+              <div className="onboard-tooltip">
+                <div className="onboard-arrow" />
+                👆 Fill in your profile for personalized advice
+                <button className="onboard-dismiss" onClick={dismissTooltip}>Got it</button>
+              </div>
+            )}
+          </div>
+
           <button className="icon-btn" onClick={() => { setShowHistory(h => !h); setShowProfile(false); }} title="Chat history">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/></svg>
           </button>
@@ -689,7 +1037,14 @@ export default function App() {
 
       <main className="chat-area" ref={chatRef} onScroll={handleScroll}>
         {messages.length === 0
-          ? <WelcomePage onPrompt={text => sendMessage(text)} profileFilled={profileFilled} onOpenProfile={() => setShowProfile(true)} />
+          ? <WelcomePage
+              onPrompt={text => sendMessage(text)}
+              profileFilled={profileFilled}
+              onOpenProfile={() => setShowProfile(true)}
+              sessions={sessions}
+              profile={profile}
+              onContinueLastChat={onContinueLastChat}
+            />
           : <>
               <div className="date-divider"><span>Today</span></div>
               {messages.map((msg, i) => (
@@ -711,8 +1066,26 @@ export default function App() {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
           </button>
           <input ref={fileRef} type="file" accept=".pdf,image/*" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) { setStagedFile(f); e.target.value = ""; }}} />
+
+          {/* Feature 8: Voice input mic button */}
+          <button
+            className={`attach-btn mic-btn${listening ? ' mic-btn--active' : ''}`}
+            onClick={toggleVoice}
+            disabled={loading}
+            title={listening ? "Stop listening" : "Voice input"}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+              <line x1="12" y1="19" x2="12" y2="23"/>
+              <line x1="8" y1="23" x2="16" y2="23"/>
+            </svg>
+          </button>
+
+          {/* Feature 9: auto-resize textarea with textareaRef */}
           <textarea
-            className="text-input" rows={1}
+            ref={textareaRef}
+            className="text-input"
             placeholder={stagedFile ? "Press Send to upload, or add a message…" : "Ask Penny about your finances…"}
             value={input}
             onChange={e => setInput(e.target.value)}

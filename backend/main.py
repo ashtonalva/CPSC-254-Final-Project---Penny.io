@@ -35,6 +35,10 @@ Your job is to:
 
 Rules:
 - ALWAYS call the appropriate tool when performing financial calculations (payoff timelines, interest costs, credit utilization). Do not do this math inline.
+- When the user has a balance, credit limit, APR, and income available, call calculate_financial_health_score to give them an overall picture.
+- When discussing or analyzing a statement that has spending categories, ALWAYS call visualize_spending_categories with the category totals so the user sees a breakdown chart.
+- When the user asks about budgeting or how to allocate their income, call calculate_budget_breakdown.
+- When the user asks "what if I paid more?" or wants to compare two payment amounts, call compare_payoff_scenarios.
 - Reference specific details the user has shared earlier in the conversation. Never ask for information the user already provided.
 - When a user uploads a statement, reference specific spending categories from it in your advice.
 - Keep responses concise (3–5 paragraphs max). Use **bold** for key numbers and terms. Use bullet points for lists of tips.
@@ -87,6 +91,75 @@ TOOLS = [
                     "minimum_payment_floor": {"type": "number", "description": "Minimum dollar floor (default 25)", "default": 25}
                 },
                 "required": ["balance", "apr"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "calculate_financial_health_score",
+            "description": "Calculate an overall financial health score (0-100) with letter grade and breakdown across credit utilization, debt-to-income ratio, APR, and housing ratio.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "balance": {"type": "number", "description": "Current credit card balance in dollars"},
+                    "credit_limit": {"type": "number", "description": "Total credit limit in dollars"},
+                    "apr": {"type": "number", "description": "Annual percentage rate as a decimal (e.g. 0.22 for 22%)"},
+                    "monthly_income": {"type": "number", "description": "Monthly take-home income in dollars"},
+                    "monthly_rent": {"type": "number", "description": "Monthly rent or housing cost in dollars (default 0)", "default": 0}
+                },
+                "required": ["balance", "credit_limit", "apr", "monthly_income"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "visualize_spending_categories",
+            "description": "Summarize spending categories with totals and percentages for display as a donut chart. ALWAYS call this when analyzing statement spending categories.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "categories": {
+                        "type": "object",
+                        "description": "Dictionary mapping category name to dollar amount spent",
+                        "additionalProperties": {"type": "number"}
+                    }
+                },
+                "required": ["categories"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "calculate_budget_breakdown",
+            "description": "Calculate a 50/30/20 budget breakdown from monthly income, showing needs, wants, and savings targets.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "monthly_income": {"type": "number", "description": "Monthly take-home income in dollars"},
+                    "monthly_rent": {"type": "number", "description": "Monthly rent or housing payment in dollars (default 0)", "default": 0},
+                    "monthly_debt_payment": {"type": "number", "description": "Monthly debt payment in dollars (default 0)", "default": 0}
+                },
+                "required": ["monthly_income"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "compare_payoff_scenarios",
+            "description": "Compare two payment scenarios side by side to show how much time and interest is saved by paying more each month.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "balance": {"type": "number", "description": "Current balance in dollars"},
+                    "apr": {"type": "number", "description": "Annual percentage rate as a decimal"},
+                    "payment_a": {"type": "number", "description": "First (lower/current) monthly payment amount"},
+                    "payment_b": {"type": "number", "description": "Second (higher/boosted) monthly payment amount"}
+                },
+                "required": ["balance", "apr", "payment_a", "payment_b"]
             }
         }
     }
@@ -226,10 +299,154 @@ def calculate_minimum_payment_cost(balance: float, apr: float, minimum_payment_r
     }
 
 
+def calculate_financial_health_score(
+    balance: float, credit_limit: float, apr: float,
+    monthly_income: float, monthly_rent: float = 0
+) -> dict:
+    breakdown = []
+
+    # Credit utilization (30 pts)
+    util = balance / credit_limit if credit_limit > 0 else 1.0
+    if util < 0.10:
+        util_pts, util_status = 30, "Excellent (<10%)"
+    elif util < 0.30:
+        util_pts, util_status = 22, "Good (<30%)"
+    elif util < 0.50:
+        util_pts, util_status = 12, "Moderate (<50%)"
+    else:
+        util_pts, util_status = 0, "High (≥50%)"
+    breakdown.append({"category": "Credit Utilization", "points": util_pts, "max": 30, "status": util_status})
+
+    # Debt-to-income ratio (25 pts)
+    dti = balance / monthly_income if monthly_income > 0 else 99
+    if dti < 1:
+        dti_pts, dti_status = 25, "Excellent (<1× income)"
+    elif dti < 3:
+        dti_pts, dti_status = 18, "Good (<3× income)"
+    elif dti < 6:
+        dti_pts, dti_status = 10, "Moderate (<6× income)"
+    else:
+        dti_pts, dti_status = 0, "High (≥6× income)"
+    breakdown.append({"category": "Debt-to-Income", "points": dti_pts, "max": 25, "status": dti_status})
+
+    # APR (25 pts)
+    if apr < 0.15:
+        apr_pts, apr_status = 25, "Excellent (<15%)"
+    elif apr < 0.20:
+        apr_pts, apr_status = 18, "Good (<20%)"
+    elif apr < 0.25:
+        apr_pts, apr_status = 10, "Moderate (<25%)"
+    elif apr < 0.30:
+        apr_pts, apr_status = 5, "High (<30%)"
+    else:
+        apr_pts, apr_status = 0, "Very High (≥30%)"
+    breakdown.append({"category": "APR", "points": apr_pts, "max": 25, "status": apr_status})
+
+    # Housing ratio (20 pts)
+    housing_ratio = monthly_rent / monthly_income if monthly_income > 0 and monthly_rent > 0 else 0
+    if monthly_rent == 0:
+        housing_pts, housing_status = 20, "N/A (no rent entered)"
+    elif housing_ratio < 0.25:
+        housing_pts, housing_status = 20, "Excellent (<25%)"
+    elif housing_ratio < 0.30:
+        housing_pts, housing_status = 14, "Good (<30%)"
+    elif housing_ratio < 0.40:
+        housing_pts, housing_status = 7, "Moderate (<40%)"
+    else:
+        housing_pts, housing_status = 0, "High (≥40%)"
+    breakdown.append({"category": "Housing Ratio", "points": housing_pts, "max": 20, "status": housing_status})
+
+    score = util_pts + dti_pts + apr_pts + housing_pts
+    if score >= 80:
+        grade, label = "A", "Excellent"
+    elif score >= 65:
+        grade, label = "B", "Good"
+    elif score >= 50:
+        grade, label = "C", "Fair"
+    elif score >= 35:
+        grade, label = "D", "Poor"
+    else:
+        grade, label = "F", "Critical"
+
+    return {
+        "score": score,
+        "max_score": 100,
+        "grade": grade,
+        "label": label,
+        "breakdown": breakdown,
+    }
+
+
+def visualize_spending_categories(categories: dict) -> dict:
+    total = sum(categories.values())
+    sorted_cats = sorted(categories.items(), key=lambda x: x[1], reverse=True)
+    result = []
+    for label, amount in sorted_cats:
+        pct = round((amount / total * 100), 1) if total > 0 else 0
+        result.append({"label": label, "amount": round(amount, 2), "pct": pct})
+    return {"total": round(total, 2), "categories": result}
+
+
+def calculate_budget_breakdown(
+    monthly_income: float,
+    monthly_rent: float = 0,
+    monthly_debt_payment: float = 0
+) -> dict:
+    needs_target = round(monthly_income * 0.50, 2)
+    wants_target = round(monthly_income * 0.30, 2)
+    savings_target = round(monthly_income * 0.20, 2)
+    known_needs = monthly_rent + monthly_debt_payment
+    remaining_needs = max(0, round(needs_target - known_needs, 2))
+    return {
+        "monthly_income": monthly_income,
+        "needs": {
+            "target": needs_target,
+            "pct": 50,
+            "known": round(known_needs, 2),
+            "remaining": remaining_needs,
+        },
+        "wants": {
+            "target": wants_target,
+            "pct": 30,
+        },
+        "savings": {
+            "target": savings_target,
+            "pct": 20,
+        },
+    }
+
+
+def compare_payoff_scenarios(
+    balance: float, apr: float, payment_a: float, payment_b: float
+) -> dict:
+    result_a = calculate_payoff_timeline(balance, apr, payment_a)
+    result_b = calculate_payoff_timeline(balance, apr, payment_b)
+    return {
+        "scenario_a": {
+            "payment": payment_a,
+            "months": result_a.get("months"),
+            "years": result_a.get("years"),
+            "total_interest": result_a.get("total_interest"),
+            "balance_history": result_a.get("balance_history", []),
+        },
+        "scenario_b": {
+            "payment": payment_b,
+            "months": result_b.get("months"),
+            "years": result_b.get("years"),
+            "total_interest": result_b.get("total_interest"),
+            "balance_history": result_b.get("balance_history", []),
+        },
+    }
+
+
 TOOL_HANDLERS = {
     "calculate_payoff_timeline": calculate_payoff_timeline,
     "calculate_credit_utilization": calculate_credit_utilization,
     "calculate_minimum_payment_cost": calculate_minimum_payment_cost,
+    "calculate_financial_health_score": calculate_financial_health_score,
+    "visualize_spending_categories": visualize_spending_categories,
+    "calculate_budget_breakdown": calculate_budget_breakdown,
+    "compare_payoff_scenarios": compare_payoff_scenarios,
 }
 
 

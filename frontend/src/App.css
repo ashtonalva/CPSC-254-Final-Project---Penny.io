@@ -34,6 +34,32 @@
   --rxs: 7px;
 }
 
+/* ─── Feature 7: Light mode overrides ──────────── */
+.app.light-mode {
+  --bg:          #f0f2f8;
+  --surface:     #ffffff;
+  --surface-2:   #f5f6fa;
+  --surface-3:   #eceef5;
+  --surface-4:   #e2e4ee;
+  --border:      #d4d8e8;
+  --border-hi:   #c0c5d8;
+  --text:        #1a1d2e;
+  --text-2:      #4a5070;
+  --text-3:      #8090b0;
+  --red-bg:      rgba(239,68,68,0.08);
+  --red-border:  rgba(239,68,68,0.2);
+  --red-text:    #dc2626;
+  --indigo-dim:  rgba(99,102,241,0.1);
+}
+.app.light-mode .penny-bubble {
+  background: linear-gradient(135deg, #f5f6fa, #eceef5);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.8);
+}
+.app.light-mode .chat-area { background: var(--bg); }
+.app.light-mode .wp-hero { background: linear-gradient(160deg, #ffffff 0%, #f0f2f8 100%); }
+.app.light-mode .wp-feature-card { background: #ffffff; }
+.app.light-mode .wp-prompt-btn { background: #ffffff; }
+
 html, body, #root {
   height: 100%;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -43,7 +69,7 @@ html, body, #root {
   -webkit-font-smoothing: antialiased;
 }
 
-/* ─── App shell ─────────────────────────────── */
+/* ─── App shell ─────────────────────────────────── */
 .app {
   display: flex;
   flex-direction: column;
@@ -69,7 +95,7 @@ html, body, #root {
   z-index: 0;
 }
 
-/* ─── Progress bar ──────────────────────────── */
+/* ─── Progress bar ──────────────────────────────── */
 .progress-bar {
   position: absolute;
   top: 0; left: 0; right: 0;
@@ -99,7 +125,7 @@ html, body, #root {
   100% { left: 110%; }
 }
 
-/* ─── Header ─────────────────────────────────── */
+/* ─── Header ─────────────────────────────────────── */
 .header {
   display: flex;
   align-items: center;
@@ -212,7 +238,7 @@ html, body, #root {
   color: var(--indigo);
 }
 
-/* ─── Chat area ─────────────────────────────── */
+/* ─── Chat area ─────────────────────────────────── */
 .chat-area {
   flex: 1; overflow-y: auto;
   padding: 26px 18px 14px;
@@ -228,7 +254,7 @@ html, body, #root {
 .chat-area::-webkit-scrollbar-track { background: transparent; }
 .chat-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
 
-/* ─── Date divider ──────────────────────────── */
+/* ─── Date divider ──────────────────────────────── */
 .date-divider {
   display: flex; align-items: center; gap: 10px;
   color: var(--text-3); font-size: 10.5px; font-weight: 600;
@@ -239,7 +265,7 @@ html, body, #root {
   content: ''; flex: 1; height: 1px; background: var(--border);
 }
 
-/* ─── Message rows ──────────────────────────── */
+/* ─── Message rows ──────────────────────────────── */
 .bubble-row {
   display: flex; gap: 10px; align-items: flex-end;
 }
@@ -254,7 +280,7 @@ html, body, #root {
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* ─── Avatar ────────────────────────────────── */
+/* ─── Avatar ────────────────────────────────────── */
 .avatar-wrap {
   position: relative; flex-shrink: 0;
   width: 34px; height: 34px;
@@ -283,7 +309,7 @@ html, body, #root {
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ─── Bubbles ───────────────────────────────── */
+/* ─── Bubbles ───────────────────────────────────── */
 .bubble-col { display: flex; flex-direction: column; gap: 4px; max-width: 72%; }
 
 .bubble {
@@ -328,7 +354,7 @@ html, body, #root {
 }
 .user-bubble .message-content strong { color: #fff; }
 
-/* ─── Copy button ───────────────────────────── */
+/* ─── Copy button ───────────────────────────────── */
 .copy-btn {
   display: inline-flex; align-items: center; gap: 5px;
   margin-top: 10px;
@@ -357,7 +383,7 @@ html, body, #root {
   color: var(--green);
 }
 
-/* ─── Tool chips ────────────────────────────── */
+/* ─── Tool chips ────────────────────────────────── */
 .tool-chips {
   display: flex; flex-wrap: wrap; gap: 6px;
   padding: 0 2px;
@@ -388,7 +414,7 @@ html, body, #root {
 .ts-right { text-align: right; }
 .ts-left  { text-align: left; }
 
-/* ─── Scroll-to-bottom button ───────────────── */
+/* ─── Scroll-to-bottom button ───────────────────── */
 .scroll-btn {
   position: absolute;
   bottom: 110px; left: 0; right: 0;
@@ -411,7 +437,68 @@ html, body, #root {
   box-shadow: 0 6px 24px rgba(99,102,241,0.2);
 }
 
-/* ─── Welcome page ──────────────────────────── */
+/* ─── Feature 6: Welcome back banner ───────────── */
+.welcome-back-banner {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--indigo-dim);
+  border: 1px solid rgba(129,140,248,0.25);
+  border-radius: 14px;
+  margin-bottom: 14px;
+  animation: slide-in 0.25s ease both;
+}
+
+.wb-text {
+  font-size: 13px; color: var(--text-2); flex: 1;
+}
+
+.wb-continue-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 14px;
+  background: var(--indigo-mid);
+  border: none; border-radius: var(--rxs);
+  color: #fff; font-size: 12.5px; font-weight: 600; font-family: inherit;
+  cursor: pointer; white-space: nowrap;
+  transition: all 0.15s;
+  box-shadow: 0 2px 10px rgba(99,102,241,0.3);
+  flex-shrink: 0;
+}
+.wb-continue-btn:hover {
+  background: var(--indigo);
+  box-shadow: 0 4px 16px rgba(99,102,241,0.45);
+  transform: translateY(-1px);
+}
+
+/* ─── Feature 5: Daily Tip card ─────────────────── */
+.daily-tip-card {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 13px 16px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-hi);
+  border-radius: 14px;
+  margin-bottom: 18px;
+  animation: slide-in 0.3s ease both;
+}
+
+.dt-icon {
+  font-size: 22px; flex-shrink: 0; line-height: 1; margin-top: 1px;
+}
+
+.dt-body {
+  display: flex; flex-direction: column; gap: 3px;
+}
+
+.dt-label {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1px; color: var(--indigo);
+}
+
+.dt-text {
+  font-size: 12.5px; color: var(--text-2); line-height: 1.55;
+}
+
+/* ─── Welcome page ──────────────────────────────── */
 .welcome-page {
   display: flex; flex-direction: column;
   gap: 0;
@@ -582,7 +669,7 @@ html, body, #root {
   letter-spacing: 0.1px;
 }
 
-/* ─── File chip (staged upload) ─────────────── */
+/* ─── File chip (staged upload) ─────────────────── */
 .file-chip {
   display: flex; align-items: center; gap: 8px;
   margin-bottom: 10px;
@@ -621,7 +708,7 @@ html, body, #root {
   color: var(--red-text);
 }
 
-/* ─── Typing / wave indicator ───────────────── */
+/* ─── Typing / wave indicator ───────────────────── */
 .typing-bubble {
   display: flex; align-items: center; gap: 12px;
   padding: 13px 18px;
@@ -659,7 +746,7 @@ html, body, #root {
   to   { opacity: 1; transform: translateX(0); }
 }
 
-/* ─── Upload toast ──────────────────────────── */
+/* ─── Upload toast ──────────────────────────────── */
 .upload-toast {
   align-self: center;
   display: flex; align-items: center; gap: 10px;
@@ -681,7 +768,7 @@ html, body, #root {
   flex-shrink: 0;
 }
 
-/* ─── Error ─────────────────────────────────── */
+/* ─── Error ─────────────────────────────────────── */
 .error-banner {
   padding: 11px 15px;
   border-radius: var(--rsm);
@@ -691,7 +778,7 @@ html, body, #root {
   font-size: 13.5px; font-weight: 500;
 }
 
-/* ─── Input area ─────────────────────────────── */
+/* ─── Input area ─────────────────────────────────── */
 .input-area {
   border-top: 1px solid var(--border);
   padding: 14px 16px 16px;
@@ -740,11 +827,24 @@ html, body, #root {
 }
 .attach-btn:disabled { opacity: 0.25; cursor: not-allowed; }
 
+/* ─── Feature 8: Mic button ─────────────────────── */
+.mic-btn { color: var(--text-3); }
+.mic-btn--active {
+  color: var(--red-text) !important;
+  animation: mic-pulse 1s ease-in-out infinite;
+}
+@keyframes mic-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.5; }
+}
+
+/* ─── Feature 9: Textarea auto-resize ───────────── */
 .text-input {
   flex: 1; resize: none; border: none; background: transparent;
   padding: 5px 4px;
   font-size: 14.5px; font-family: inherit; line-height: 1.55;
   outline: none; color: var(--text);
+  min-height: 38px;
   max-height: 120px; overflow-y: auto;
   caret-color: var(--indigo);
 }
@@ -794,7 +894,7 @@ html, body, #root {
   font-family: inherit; color: var(--text-2);
 }
 
-/* ─── Markdown ──────────────────────────────── */
+/* ─── Markdown ──────────────────────────────────── */
 .md-p  { margin-bottom: 7px; }
 .md-p:last-child { margin-bottom: 0; }
 .md-li { margin-left: 20px; margin-bottom: 5px; list-style-type: disc; color: var(--text-2); }
@@ -826,7 +926,7 @@ html, body, #root {
 }
 @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
 
-/* ─── Payoff chart ──────────────────────────── */
+/* ─── Payoff chart ──────────────────────────────── */
 .payoff-chart {
   margin-top: 6px;
   background: var(--surface-2);
@@ -842,7 +942,246 @@ html, body, #root {
   text-transform: uppercase; margin-bottom: 4px;
 }
 
-/* ─── Suggestion chips ──────────────────────── */
+/* ─── Feature 1: Health Score Card ─────────────── */
+.health-score-card {
+  margin-top: 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-hi);
+  border-radius: 12px;
+  padding: 14px;
+  animation: chip-pop 0.3s ease both;
+}
+
+.hsc-top {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 14px;
+}
+
+.hsc-gauge-wrap {
+  position: relative; flex-shrink: 0;
+  width: 140px; height: 80px;
+}
+
+.hsc-score-center {
+  position: absolute;
+  bottom: 0; left: 50%;
+  transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center;
+  gap: 0;
+}
+
+.hsc-score-num {
+  font-size: 22px; font-weight: 800; line-height: 1;
+  letter-spacing: -1px;
+}
+
+.hsc-score-grade {
+  font-size: 13px; font-weight: 700; line-height: 1;
+}
+
+.hsc-right {
+  display: flex; flex-direction: column; gap: 4px;
+}
+
+.hsc-label {
+  font-size: 14px; font-weight: 700; color: var(--text);
+}
+
+.hsc-sub {
+  font-size: 12px; color: var(--text-3);
+}
+
+.hsc-breakdown {
+  display: flex; flex-direction: column; gap: 10px;
+}
+
+.hsc-row { display: flex; flex-direction: column; gap: 3px; }
+
+.hsc-row-top {
+  display: flex; justify-content: space-between; align-items: center;
+}
+
+.hsc-cat {
+  font-size: 11.5px; font-weight: 600; color: var(--text-2);
+}
+
+.hsc-pts {
+  font-size: 11px; color: var(--text-3);
+}
+
+.hsc-bar-bg {
+  height: 5px; background: var(--surface-4); border-radius: 3px; overflow: hidden;
+}
+
+.hsc-bar-fill {
+  height: 100%; border-radius: 3px;
+  transition: width 0.6s ease;
+}
+
+.hsc-status {
+  font-size: 10.5px; color: var(--text-3);
+}
+
+/* ─── Feature 2: Spending Pie Chart ────────────── */
+.spending-pie-card {
+  margin-top: 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-hi);
+  border-radius: 12px;
+  padding: 12px 14px;
+  animation: chip-pop 0.3s ease both;
+}
+
+.spc-title {
+  font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.6px; color: var(--text-3);
+  margin-bottom: 10px;
+}
+
+.spc-body {
+  display: flex; align-items: center; gap: 16px;
+}
+
+.spc-donut-wrap {
+  flex-shrink: 0;
+}
+
+.spc-legend {
+  flex: 1; display: flex; flex-direction: column; gap: 5px;
+  min-width: 0;
+}
+
+.spc-legend-row {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11.5px;
+  min-width: 0;
+}
+
+.spc-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+
+.spc-leg-label {
+  flex: 1; color: var(--text-2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.spc-leg-pct {
+  color: var(--text-3); flex-shrink: 0; font-size: 10.5px;
+}
+
+.spc-leg-amt {
+  color: var(--text); font-weight: 600; flex-shrink: 0; font-size: 10.5px;
+  text-align: right; min-width: 52px;
+}
+
+/* ─── Feature 3: Budget Breakdown ──────────────── */
+.budget-breakdown-card {
+  margin-top: 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-hi);
+  border-radius: 12px;
+  padding: 12px 14px;
+  animation: chip-pop 0.3s ease both;
+}
+
+.bbd-title {
+  font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.6px; color: var(--text-3);
+  margin-bottom: 4px;
+}
+
+.bbd-income {
+  font-size: 11.5px; color: var(--text-3); margin-bottom: 12px;
+}
+
+.bbd-row { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+.bbd-row:last-child { margin-bottom: 0; }
+
+.bbd-row-top {
+  display: flex; justify-content: space-between; align-items: center;
+}
+
+.bbd-label {
+  font-size: 12.5px; font-weight: 600; color: var(--text);
+}
+
+.bbd-amount {
+  font-size: 13px; font-weight: 700;
+}
+
+.bbd-bar-bg {
+  height: 6px; background: var(--surface-4); border-radius: 4px; overflow: hidden;
+}
+
+.bbd-bar-fill {
+  height: 100%; border-radius: 4px;
+  transition: width 0.6s ease;
+}
+
+.bbd-sub {
+  font-size: 10.5px; color: var(--text-3);
+}
+
+/* ─── Feature 4: What-If Comparison ────────────── */
+.whatif-card {
+  margin-top: 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-hi);
+  border-radius: 12px;
+  padding: 12px 14px;
+  animation: chip-pop 0.3s ease both;
+}
+
+.wic-title {
+  font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.6px; color: var(--text-3);
+  margin-bottom: 10px;
+}
+
+.wic-cols {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+}
+
+.wic-col {
+  display: flex; flex-direction: column; gap: 6px;
+}
+
+.wic-col-label {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.wic-payment {
+  font-size: 20px; font-weight: 800; line-height: 1;
+  letter-spacing: -0.5px;
+}
+
+.wic-mo {
+  font-size: 11px; font-weight: 500; color: var(--text-3); margin-left: 2px;
+}
+
+.wic-stat {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 11.5px;
+}
+
+.wic-stat-k {
+  color: var(--text-3); font-size: 10.5px;
+}
+
+.wic-savings {
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: rgba(52,211,153,0.07);
+  border: 1px solid rgba(52,211,153,0.2);
+  border-radius: 8px;
+  font-size: 12px; color: var(--text-2);
+  line-height: 1.5;
+}
+
+/* ─── Suggestion chips ──────────────────────────── */
 .suggestions {
   display: flex; flex-wrap: wrap; gap: 6px;
   margin-top: 6px;
@@ -863,7 +1202,7 @@ html, body, #root {
   color: var(--indigo);
 }
 
-/* ─── Icon buttons (export, history) ───────── */
+/* ─── Icon buttons (export, history) ───────────── */
 .icon-btn {
   width: 32px; height: 32px;
   border-radius: var(--rxs);
@@ -875,7 +1214,7 @@ html, body, #root {
 }
 .icon-btn:hover { background: var(--surface-3); color: var(--indigo); border-color: rgba(129,140,248,0.35); }
 
-/* ─── History panel ─────────────────────────── */
+/* ─── History panel ─────────────────────────────── */
 .history-panel {
   position: absolute;
   top: 64px; right: 16px;
@@ -929,7 +1268,7 @@ html, body, #root {
 }
 .history-del:hover { color: var(--red-text); }
 
-/* ─── Icon btn active state (profile filled) ── */
+/* ─── Icon btn active state (profile filled) ──── */
 .icon-btn--active {
   border-color: rgba(129,140,248,0.45);
   color: var(--indigo);
@@ -946,7 +1285,7 @@ html, body, #root {
   box-shadow: 0 0 6px rgba(52,211,153,0.7);
 }
 
-/* ─── Profile banner ────────────────────────── */
+/* ─── Profile banner ────────────────────────────── */
 .profile-banner {
   display: flex; align-items: center; gap: 7px;
   padding: 7px 22px;
@@ -976,7 +1315,7 @@ html, body, #root {
 }
 .profile-banner-edit:hover { background: rgba(129,140,248,0.15); }
 
-/* ─── Profile panel ─────────────────────────── */
+/* ─── Profile panel ─────────────────────────────── */
 .profile-panel {
   position: absolute;
   top: 64px; right: 16px;
@@ -1097,3 +1436,36 @@ html, body, #root {
 }
 .profile-clear-btn:hover { background: var(--red-bg); border-color: var(--red-border); color: var(--red-text); }
 
+/* ─── Feature 10: Onboarding tooltip ───────────── */
+.onboard-tooltip {
+  position: absolute;
+  top: 44px; right: 0;
+  background: var(--surface-3);
+  border: 1px solid var(--border-hi);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 12px; color: var(--text-2);
+  white-space: nowrap;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.4);
+  z-index: 100;
+  animation: slide-in 0.2s ease both;
+  display: flex; align-items: center; gap: 8px;
+}
+
+.onboard-arrow {
+  position: absolute;
+  top: -6px; right: 12px;
+  width: 10px; height: 6px;
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+  background: var(--border-hi);
+}
+
+.onboard-dismiss {
+  background: var(--indigo-mid);
+  border: none; border-radius: 5px;
+  color: #fff; font-size: 11px; font-weight: 600; font-family: inherit;
+  padding: 3px 10px; cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.onboard-dismiss:hover { background: var(--indigo); }
