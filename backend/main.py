@@ -1,5 +1,6 @@
 import asyncio
 import base64
+import io
 import json
 import os
 
@@ -377,7 +378,9 @@ def calculate_financial_health_score(
     }
 
 
-def visualize_spending_categories(categories: dict) -> dict:
+def visualize_spending_categories(categories: dict = None) -> dict:
+    if not categories:
+        return {"total": 0, "categories": []}
     total = sum(categories.values())
     sorted_cats = sorted(categories.items(), key=lambda x: x[1], reverse=True)
     result = []
@@ -458,7 +461,10 @@ def run_tool_call(tool_name: str, args: dict) -> str:
     handler = TOOL_HANDLERS.get(tool_name)
     if not handler:
         return json.dumps({"error": f"Unknown tool: {tool_name}"})
-    return json.dumps(handler(**args))
+    try:
+        return json.dumps(handler(**args))
+    except Exception as e:
+        return json.dumps({"error": str(e)})
 
 
 def chat_with_tools(messages: list[dict]) -> tuple[str, list[str]]:
@@ -552,9 +558,22 @@ async def upload_statement(file: UploadFile = File(...), messages: str = Form(de
     try:
         file_bytes = await file.read()
         content_type = file.content_type or ""
-        b64 = base64.b64encode(file_bytes).decode()
-        if "pdf" in content_type or file.filename.lower().endswith(".pdf"):
-            file_content = {"type": "image_url", "image_url": {"url": f"data:application/pdf;base64,{b64}"}}
+        is_pdf = "pdf" in content_type or file.filename.lower().endswith(".pdf")
+
+        if is_pdf:
+            # Extract text from PDF and send as plain text
+            try:
+                from pypdf import PdfReader
+                reader = PdfReader(io.BytesIO(file_bytes))
+                pdf_text = "\n".join(page.extract_text() or "" for page in reader.pages).strip()
+                if not pdf_text:
+                    raise ValueError("No text found in PDF")
+            except Exception:
+                raise HTTPException(status_code=400, detail="Could not read PDF. Try uploading an image of your statement instead.")
+            upload_message = {
+                "role": "user",
+                "content": f"I've uploaded my credit card statement (extracted from PDF):\n\n{pdf_text}\n\nPlease analyze it: identify my top spending categories, flag any unusual charges, and give me 2-3 specific actionable tips to improve my spending habits based on what you see."
+            }
         else:
             if "png" in content_type:
                 media_type = "image/png"
@@ -564,16 +583,16 @@ async def upload_statement(file: UploadFile = File(...), messages: str = Form(de
                 media_type = "image/webp"
             else:
                 media_type = "image/jpeg"
-            file_content = {"type": "image_url", "image_url": {"url": f"data:{media_type};base64,{b64}"}}
+            b64 = base64.b64encode(file_bytes).decode()
+            upload_message = {
+                "role": "user",
+                "content": [
+                    {"type": "image_url", "image_url": {"url": f"data:{media_type};base64,{b64}"}},
+                    {"type": "text", "text": "I've uploaded my credit card statement. Please analyze it: identify my top spending categories, flag any unusual charges, and give me 2-3 specific actionable tips to improve my spending habits based on what you see."}
+                ]
+            }
 
         history = json.loads(messages)
-        upload_message = {
-            "role": "user",
-            "content": [
-                file_content,
-                {"type": "text", "text": "I've uploaded my credit card statement. Please analyze it: identify my top spending categories, flag any unusual charges, and give me 2-3 specific actionable tips to improve my spending habits based on what you see."}
-            ]
-        }
         full_messages = [{"role": "system", "content": SYSTEM_PROMPT}] + history + [upload_message]
         response = client.chat.completions.create(
             model="gpt-4o", messages=full_messages, tools=TOOLS, tool_choice="auto",

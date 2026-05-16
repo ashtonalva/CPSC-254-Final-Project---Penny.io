@@ -711,10 +711,6 @@ export default function App() {
   // Feature 7: dark/light mode
   const [theme, setTheme] = useState(() => localStorage.getItem('penny-theme') || 'dark');
 
-  // Feature 8: voice input
-  const [listening, setListening] = useState(false);
-  const recognitionRef = useRef(null);
-
   // Feature 10: onboarding tooltip
   const [showTooltip, setShowTooltip] = useState(
     () => !localStorage.getItem('penny-onboarded') && !Object.values(loadProfile()).some(v => v !== '')
@@ -739,7 +735,7 @@ export default function App() {
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
-    el.style.height = 'auto';
+    el.style.height = '38px';
     el.style.height = Math.min(el.scrollHeight, 120) + 'px';
   }, [input]);
 
@@ -807,20 +803,6 @@ export default function App() {
   function dismissTooltip() {
     setShowTooltip(false);
     localStorage.setItem('penny-onboarded', '1');
-  }
-
-  // Feature 8: voice input toggle
-  function toggleVoice() {
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) { setError("Voice input not supported in this browser. Try Chrome."); return; }
-    if (listening) { recognitionRef.current?.stop(); setListening(false); return; }
-    const r = new SR();
-    r.continuous = false; r.interimResults = false; r.lang = 'en-US';
-    r.onresult = e => { setInput(prev => (prev ? prev + ' ' : '') + e.results[0][0].transcript); setListening(false); };
-    r.onerror = () => setListening(false);
-    r.onend = () => setListening(false);
-    recognitionRef.current = r;
-    r.start(); setListening(true);
   }
 
   // ── Streaming send ──────────────────────────────────────────────────────────
@@ -1067,21 +1049,6 @@ export default function App() {
           </button>
           <input ref={fileRef} type="file" accept=".pdf,image/*" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) { setStagedFile(f); e.target.value = ""; }}} />
 
-          {/* Feature 8: Voice input mic button */}
-          <button
-            className={`attach-btn mic-btn${listening ? ' mic-btn--active' : ''}`}
-            onClick={toggleVoice}
-            disabled={loading}
-            title={listening ? "Stop listening" : "Voice input"}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-              <line x1="12" y1="19" x2="12" y2="23"/>
-              <line x1="8" y1="23" x2="16" y2="23"/>
-            </svg>
-          </button>
-
           {/* Feature 9: auto-resize textarea with textareaRef */}
           <textarea
             ref={textareaRef}
@@ -1096,7 +1063,7 @@ export default function App() {
             {loading ? <div className="send-spinner" /> : <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>}
           </button>
         </div>
-        <p className="input-hint"><kbd>Enter</kbd> send · <kbd>⇧ Enter</kbd> new line · 📎 upload statement</p>
+        <p className="input-hint"><kbd>Enter</kbd> send · <kbd>⇧ Enter</kbd> new line · 📎 upload statement as image (JPG, PNG) for best results</p>
       </footer>
     </div>
   );
